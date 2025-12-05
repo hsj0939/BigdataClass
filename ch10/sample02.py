@@ -5,34 +5,40 @@ from ch05.common_function import init_plt
 #한글폰트설정
 init_plt()
 
+COL_POPULATION = 'population'
+COL_TOTAL_CASES = 'total_cases'
+
 # file_path에 대한 데이터 리턴 함수(dataframe)
 def get_covid_data_series(file_path):
-    kor_df = pd.read_csv(file_path)
-    kor_index_df = kor_df.set_index('date')
-    return kor_index_df['total_cases']
+    df = pd.read_csv(file_path)
+    index_df = df.set_index('date')
+
+    #TODO: 은선아 이코드 확인좀!!!
+    population = df[COL_POPULATION].iat[0]
+
+    return {
+        COL_POPULATION: population,
+        'data_sr': index_df[COL_TOTAL_CASES]
+    }
 #end-def
 
-# 2020-01-01 ~ 2021-12-01
-kor_data_sr = get_covid_data_series('../ch05/data/covid_korea.csv')
-# 2021-02-01 ~ 2022-01-01
-kor_data_index = kor_data_sr.index
+kor_data = get_covid_data_series('../ch05/data/covid_korea.csv')
+kor_data_index = kor_data['data_sr'].index
 
-hi_data_sr = get_covid_data_series('./hi_covid_data.csv')
-hi_data_index = hi_data_sr.index
+hi_data = get_covid_data_series('./hi_covid_data.csv')
+hi_data_index = hi_data['data_sr'].index
 
-#2020-01-01 ~ 2022-01-01
 #2개의 인덱스를 합침.
 data_index = kor_data_index.union(hi_data_index)
 
 ##################################################################
 #인구비율 구하기!!!!!
-rate = 10.4
-
+rate = round(kor_data[COL_POPULATION] / hi_data[COL_POPULATION], 2)
 
 covid_df = pd.DataFrame(
     {
-        '대한민국': kor_data_sr,
-        '하와이': hi_data_sr * rate
+        '대한민국': kor_data['data_sr'],
+        '하와이': hi_data['data_sr'] * rate
     }, index = data_index)
 covid_df.plot.line()
 plt.show()
